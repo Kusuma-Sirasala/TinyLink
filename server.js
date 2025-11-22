@@ -1,81 +1,73 @@
 const express = require('express');
+const bodyParser = require('body-parser');
 const app = express();
-const { Pool } = require('pg');
-const crypto = require('crypto');
-require('dotenv').config();
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
-});
+const PORT = process.env.PORT || 4000;
 
-app.use(express.json());
+// Serve static frontend
 app.use(express.static('public'));
+app.use(bodyParser.json());
 
-// Health check
-app.get('/healthz', (req, res) => {
-  res.status(200).json({ ok: true, version: '1.0' });
-});
+// In-memory database
+const urlDatabase = {};
 
-// Create link
-app.post('/api/links', async (req, res) => {
+// Create short link
+app.post('/api/links', (req, res) => {
   const { url, code } = req.body;
+  if (!url) return res.status(400).json({ error: 'Please provide a URL' });
 
-  if (!url || !/^https?:\/\//i.test(url)) {
-    return res.status(400).json({ error: 'Invalid URL' });
+  const shortCode = code || Math.random().toString(36).substring(2, 8);
+
+  if (urlDatabase[shortCode]) {
+    return res.status(409).json({ error: 'Code already exists' });
   }
 
-  let shortCode = code || crypto.randomBytes(3).toString('hex'); // 6 chars
-  shortCode = shortCode.slice(0, 8);
+  urlDatabase[shortCode] = { url, clicks: 0, lastClicked: null };
+  res.json({ code: shortCode });
+});
 
-  try {
-    const existing = await pool.query('SELECT * FROM links WHERE code=$1', [shortCode]);
-    if (existing.rows.length > 0) return res.status(409).json({ error: 'Code already exists' });
+// Get all links
+app.get('/api/links', (req, res) => {
+  const list = Object.keys(urlDatabase).map(code => ({
+    code,
+    ...urlDatabase[code]
+  }));
+  res.json(list);
+});
 
-    await pool.query(
-      'INSERT INTO links(code, url) VALUES($1, $2)',
-      [shortCode, url]
-    );
+// Get single link stats
+app.get('/api/links/:code', (req, res) => {
+  const { code } = req.params;
+  const data = urlDatabase[code];
+  if (!data) return res.status(404).json({ error: 'Not found' });
+  res.json({ code, ...data });
+});
 
-    res.json({ code: shortCode, url });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
+// Delete link
+app.delete('/api/links/:code', (req, res) => {
+  const { code } = req.params;
+  if (urlDatabase[code]) {
+    delete urlDatabase[code];
+    return res.sendStatus(200);
   }
-});
-
-// List all links
-app.get('/api/links', async (req, res) => {
-  const { rows } = await pool.query('SELECT * FROM links ORDER BY created_at DESC');
-  res.json(rows);
-});
-
-// Stats for one code
-app.get('/api/links/:code', async (req, res) => {
-  const { code } = req.params;
-  const { rows } = await pool.query('SELECT * FROM links WHERE code=$1', [code]);
-  if (!rows.length) return res.status(404).json({ error: 'Not found' });
-  res.json(rows[0]);
-});
-
-// Delete a link
-app.delete('/api/links/:code', async (req, res) => {
-  const { code } = req.params;
-  const { rowCount } = await pool.query('DELETE FROM links WHERE code=$1', [code]);
-  if (!rowCount) return res.status(404).json({ error: 'Not found' });
-  res.status(204).send();
+  res.sendStatus(404);
 });
 
 // Redirect
-app.get('/:code', async (req, res) => {
+app.get('/:code', (req, res) => {
   const { code } = req.params;
-  const { rows } = await pool.query('SELECT * FROM links WHERE code=$1', [code]);
-  if (!rows.length) return res.status(404).send('Link not found');
+  const data = urlDatabase[code];
+  if (!data) return res.status(404).send('Link not found');
 
-  const link = rows[0];
-  await pool.query('UPDATE links SET click_count = click_count + 1, last_clicked = NOW() WHERE code=$1', [code]);
-
-  res.redirect(link.url);
+  data.clicks++;
+  data.lastClicked = new Date().toISOString();
+  res.redirect(data.url);
 });
 
-const PORT = process.env.PORT || 4000;
+// Healthcheck
+app.get('/healthz', (req, res) => {
+  res.json({ ok: true, version: '1.0' });
+});
+
+// Start server
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

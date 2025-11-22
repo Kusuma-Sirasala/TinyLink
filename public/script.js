@@ -1,57 +1,52 @@
-// Shorten URL
-async function shorten() {
+async function createLink() {
   const url = document.getElementById('urlInput').value;
-  const code = document.getElementById('customCode').value;
+  const code = document.getElementById('codeInput').value;
 
   if (!url) {
-    alert("Please enter a URL");
+    alert('Please enter a URL');
     return;
   }
 
-  const response = await fetch('/api/links', {
+  const res = await fetch('/api/links', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url: url, code: code })
+    body: JSON.stringify({ url, code })
   });
 
-  const data = await response.json();
+  const data = await res.json();
 
   if (data.error) {
     document.getElementById('result').innerText = data.error;
   } else {
-    document.getElementById('result').innerHTML =
-      `Short Link: <a target="_blank" href="/${data.code}">${window.location.origin}/${data.code}</a>`;
+    document.getElementById('result').innerHTML = `Short link created: <a href="${window.location.origin}/${data.code}" target="_blank">${window.location.origin}/${data.code}</a>`;
     loadLinks();
   }
 }
 
-// Load all links
 async function loadLinks() {
-  const response = await fetch('/api/links');
-  const links = await response.json();
+  const res = await fetch('/api/links');
+  const links = await res.json();
 
-  const tbody = document.getElementById('linksBody');
+  const tbody = document.getElementById('linkTable');
   tbody.innerHTML = '';
 
-  links.forEach(link => {
+  links.forEach(l => {
     const tr = document.createElement('tr');
-
     tr.innerHTML = `
-      <td>${link.code}</td>
-      <td>${link.url}</td>
-      <td>${link.clicks}</td>
-      <td>${link.lastClicked || '-'}</td>
-      <td><button onclick="deleteLink('${link.code}')">Delete</button></td>
+      <td>${l.code}</td>
+      <td>${l.url}</td>
+      <td>${l.clicks}</td>
+      <td>${l.lastClicked || '-'}</td>
+      <td><button onclick="deleteLink('${l.code}')">Delete</button></td>
     `;
     tbody.appendChild(tr);
   });
 }
 
-// Delete a link
 async function deleteLink(code) {
-  const response = await fetch(`/api/links/${code}`, { method: 'DELETE' });
-  if (response.ok) loadLinks();
+  await fetch(`/api/links/${code}`, { method: 'DELETE' });
+  loadLinks();
 }
 
-// Load links when page loads
+// Load table on page load
 window.onload = loadLinks;

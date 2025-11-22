@@ -1,23 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TinyLink - URL Shortener</title>
+  <title>TinyLink Dashboard</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="box">
+  <div class="container">
     <h2>🔗 TinyLink</h2>
-    <p>Paste your long URL below</p>
 
-    <input type="text" id="urlInput" placeholder="https://example.com/very/long/link">
-    <input type="text" id="customCode" placeholder="Custom code (optional)">
-    <button onclick="shorten()">Create Short Link</button>
+    <input type="text" id="urlInput" placeholder="Enter long URL">
+    <input type="text" id="codeInput" placeholder="Custom code (optional)">
+    <button onclick="createLink()">Create Short Link</button>
 
     <p id="result"></p>
 
-    <table id="linksTable">
+    <table>
       <thead>
         <tr>
           <th>Code</th>
@@ -27,13 +24,10 @@
           <th>Actions</th>
         </tr>
       </thead>
-      <tbody id="linksBody">
-        <!-- Links will appear here -->
-      </tbody>
+      <tbody id="linkTable"></tbody>
     </table>
   </div>
 
   <script src="script.js"></script>
 </body>
 </html>
-
