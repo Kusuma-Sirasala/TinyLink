@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Link Stats</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Link Statistics</h1>
+    <div id="stats">
+      <p>Loading...</p>
+    </div>
+    <a href="index.html">Back to Dashboard</a>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const statsDiv = document.getElementById('stats');
+
+    if (!code) {
+      statsDiv.innerHTML = '<p>No code provided</p>';
+    } else {
+      fetch(`/api/links/${code}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            statsDiv.innerHTML = `<p>${data.error}</p>`;
+          } else {
+            statsDiv.innerHTML = `
+              <p><strong>Code:</strong> ${data.code}</p>
+              <p><strong>URL:</strong> <a href="${data.url}" target="_blank">${data.url}</a></p>
+              <p><strong>Total Clicks:</strong> ${data.click_count}</p>
+              <p><strong>Last Clicked:</strong> ${data.last_clicked || 'Never'}</p>
+              <p><strong>Created At:</strong> ${data.created_at}</p>
+            `;
+          }
+        })
+        .catch(err => {
+          statsDiv.innerHTML = '<p>Error loading stats</p>';
+        });
+    }
+  </script>
+</body>
+</html>

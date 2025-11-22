@@ -1,28 +1,33 @@
 body {
   font-family: Arial, sans-serif;
+  margin: 20px;
   background: #f2f2f2;
-  text-align: center;
-  padding: 50px;
+  color: #333;
 }
 
-.box {
+.container {
   background: white;
-  padding: 30px;
-  border-radius: 10px;
-  width: 400px;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 900px;
   margin: auto;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
-input {
-  padding: 10px;
-  width: 100%;
-  margin: 10px 0;
-  box-sizing: border-box;
+h1 {
+  text-align: center;
 }
 
-button {
-  padding: 10px 20px;
+form input, form button {
+  padding: 10px;
+  margin: 5px 0;
+}
+
+form input {
+  width: calc(100% - 22px);
+}
+
+form button {
   background: #007bff;
   color: white;
   border: none;
@@ -30,11 +35,30 @@ button {
   border-radius: 5px;
 }
 
-button:hover {
-  background: #0056b3;
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
 }
 
-#result a {
+table th, table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+table th {
+  background: #007bff;
+  color: white;
+}
+
+button {
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+
+a {
   color: #007bff;
   text-decoration: none;
 }
