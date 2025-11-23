@@ -1,33 +1,20 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>TinyLink Dashboard</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="container">
-    <h2>🔗 TinyLink</h2>
+body {
+  font-family: Arial;
+  padding: 20px;
+}
 
-    <input type="text" id="urlInput" placeholder="Enter long URL">
-    <input type="text" id="codeInput" placeholder="Custom code (optional)">
-    <button onclick="createLink()">Create Short Link</button>
+input, button {
+  padding: 8px;
+  margin: 5px;
+}
 
-    <p id="result"></p>
+table {
+  margin-top: 20px;
+  border-collapse: collapse;
+}
 
-    <table>
-      <thead>
-        <tr>
-          <th>Code</th>
-          <th>URL</th>
-          <th>Clicks</th>
-          <th>Last Clicked</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="linkTable"></tbody>
-    </table>
-  </div>
+td, th {
+  padding: 8px 12px;
+}
 
-  <script src="script.js"></script>
-</body>
-</html>
+

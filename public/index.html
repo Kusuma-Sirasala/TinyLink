@@ -5,28 +5,26 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <h2>🔗 TinyLink</h2>
+  <h2>TinyLink Dashboard</h2>
 
-    <input type="text" id="urlInput" placeholder="Enter long URL">
-    <input type="text" id="codeInput" placeholder="Custom code (optional)">
-    <button onclick="createLink()">Create Short Link</button>
+  <input type="text" id="urlInput" placeholder="Enter long URL">
+  <input type="text" id="customCode" placeholder="Custom code (optional)">
+  <button onclick="createLink()">Create Short Link</button>
 
-    <p id="result"></p>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Code</th>
-          <th>URL</th>
-          <th>Clicks</th>
-          <th>Last Clicked</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="linkTable"></tbody>
-    </table>
-  </div>
+  <table border="1" id="linksTable">
+    <thead>
+      <tr>
+        <th>Code</th>
+        <th>URL</th>
+        <th>Clicks</th>
+        <th>Last Clicked</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Links will appear here -->
+    </tbody>
+  </table>
 
   <script src="script.js"></script>
 </body>

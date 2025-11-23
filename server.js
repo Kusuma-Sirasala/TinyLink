@@ -1,86 +1,96 @@
+// server.js
 const express = require('express');
 const bodyParser = require('body-parser');
+const fs = require('fs');
 const path = require('path');
 
 const app = express();
+const PORT = process.env.PORT || 5000;
 
-// MIDDLEWARE
+// Path to JSON file (simulates database)
+const DB_FILE = path.join(__dirname, 'links.json');
+
+// Middleware
+app.use(express.static('public')); // serve frontend
 app.use(bodyParser.json());
-app.use(express.static('public'));
 
-// In-memory database
-const urlDatabase = {};
+// Helper to read/write DB
+function readDB() {
+  if (!fs.existsSync(DB_FILE)) return {};
+  return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+}
 
-// ✅ CREATE SHORT LINK
+function writeDB(data) {
+  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+}
+
+// API: create a short link
 app.post('/api/links', (req, res) => {
   const { url, code } = req.body;
 
-  if (!url) {
-    return res.status(400).json({ error: 'Please provide a URL' });
-  }
+  if (!url) return res.status(400).json({ error: 'Please provide a URL' });
 
   const shortCode = code || Math.random().toString(36).substring(2, 8);
+  const db = readDB();
 
-  if (urlDatabase[shortCode]) {
-    return res.status(409).json({ error: 'Code already exists' });
-  }
+  if (db[shortCode]) return res.status(409).json({ error: 'Code already exists' });
 
-  urlDatabase[shortCode] = {
-    url: url,
+  db[shortCode] = {
+    url,
     clicks: 0,
     lastClicked: null
   };
 
-  res.json({
-    shortCode,
-    shortUrl: `${req.protocol}://${req.get('host')}/${shortCode}`
-  });
+  writeDB(db);
+
+  res.json({ code: shortCode });
 });
 
-// ✅ LIST ALL LINKS
+// API: list all links
 app.get('/api/links', (req, res) => {
-  const links = Object.entries(urlDatabase).map(([code, data]) => ({
-    code,
-    ...data
-  }));
-  res.json(links);
+  const db = readDB();
+  res.json(db);
 });
 
-// ✅ GET SINGLE LINK STATS
+// API: get stats for a single code
 app.get('/api/links/:code', (req, res) => {
-  const link = urlDatabase[req.params.code];
-  if (!link) return res.status(404).json({ error: 'Not found' });
+  const db = readDB();
+  const link = db[req.params.code];
+
+  if (!link) return res.status(404).json({ error: 'Link not found' });
+
   res.json(link);
 });
 
-// ✅ DELETE LINK
+// API: delete a link
 app.delete('/api/links/:code', (req, res) => {
-  if (!urlDatabase[req.params.code]) {
-    return res.status(404).json({ error: 'Not found' });
-  }
-  delete urlDatabase[req.params.code];
-  res.json({ message: 'Deleted successfully' });
+  const db = readDB();
+  if (!db[req.params.code]) return res.status(404).json({ error: 'Link not found' });
+
+  delete db[req.params.code];
+  writeDB(db);
+
+  res.json({ ok: true });
 });
 
-// ✅ REDIRECT
+// Redirect
 app.get('/:code', (req, res) => {
-  const link = urlDatabase[req.params.code];
+  const db = readDB();
+  const link = db[req.params.code];
+
   if (!link) return res.status(404).send('Link not found');
 
-  link.clicks++;
+  link.clicks += 1;
   link.lastClicked = new Date().toISOString();
+  writeDB(db);
 
-  res.redirect(302, link.url);
+  res.redirect(link.url);
 });
 
-// ✅ HEALTH CHECK
+// Health check
 app.get('/healthz', (req, res) => {
-  res.status(200).json({ ok: true, version: "1.0" });
+  res.json({ ok: true, version: '1.0' });
 });
 
-// ✅ FIXED PORT ERROR HERE
-const PORT = process.env.PORT || 4000;
-
-app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
-});
+// Start server
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
